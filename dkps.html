@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Control Panel - Dr. Singh Physiocare</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1
+      {
+      text-align: center;
+      color: #1c5d99;
+      background-color: lightblue;
+       }
+    h2 {
+      text-align: center;
+      color: #1c5d99;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background-color: #1c5d99;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #154e84;
+    }
+    #physioList {
+      margin-top: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      display: none;
+      position: absolute;
+      background: white;
+      z-index: 100;
+      width: 100%;
+    }
+    #physioList div {
+      padding: 10px;
+      cursor: pointer;
+    }
+    #physioList div:hover {
+      background-color: #e6f2ff;
+    }
+    .relative {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+<H1>Dr. Singh</h>
+<h2>Admin Control Panel</h2>
+  <!--<form action="" method="post">  -->
+<form id="dkpsform">
+  
+    <label for="patientName">Patient Name</label>
+    <input type="text" id="patientName" name="patientName" required>
+
+    <label for="issue">Issue / Condition</label>
+    <textarea id="issue" name="issue" rows="3" required></textarea>
+
+    <label for="location">Location</label>
+    <input type="text" id="location" name="location" required>
+
+    <label for="searchPhysio">Assign to Physiotherapist</label>
+    <div class="relative">
+      <input type="text" id="searchPhysio" placeholder="Search physiotherapist..." autocomplete="off" required>
+      <div id="physioList"></div>
+    </div>
+
+    <input type="hidden" id="physio" name="physio">
+
+    <button type="submit">Assign Patient</button>
+  </form>
+</div>
+
+<script>
+  const physioNames = [
+    "Dr. Aman",
+    "Dr. Ravi",
+    "Dr. Soni",
+    "Dr. Rahul Sharma",
+    "Dr. Anjali Verma",
+    "Dr. Karan Patel",
+    "Dr. Sneha Mehta"
+  ];
+
+  const searchInput = document.getElementById('searchPhysio');
+  const list = document.getElementById('physioList');
+  const hiddenInput = document.getElementById('physio');
+
+  let filtered = [];
+  let selectedIndex = -1;
+
+  function showList() {
+  list.innerHTML = '';
+  filtered.forEach((name, index) => {
+    const item = document.createElement('div');
+    item.textContent = name;
+    item.classList.add('physio-item');
+    if (index === selectedIndex) {
+      item.style.backgroundColor = '#e6f2ff';
+      // Scroll this item into view
+      setTimeout(() => {
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }, 0);
+    }
+    item.addEventListener('click', () => {
+      selectItem(index);
+    });
+    list.appendChild(item);
+  });
+  list.style.display = filtered.length ? 'block' : 'none';
+}
+
+
+  function selectItem(index) {
+    if (filtered[index]) {
+      searchInput.value = filtered[index];
+      hiddenInput.value = filtered[index];
+      list.style.display = 'none';
+      selectedIndex = -1;
+    }
+  }
+
+  searchInput.addEventListener('input', () => {
+    const value = searchInput.value.toLowerCase();
+    filtered = physioNames.filter(name => name.toLowerCase().includes(value));
+    selectedIndex = -1;
+    showList();
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (list.style.display === 'block') {
+      if (e.key === 'ArrowDown') {
+        if (selectedIndex < filtered.length - 1) {
+          selectedIndex++;
+          showList();
+        }
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp') {
+        if (selectedIndex > 0) {
+          selectedIndex--;
+          showList();
+        }
+        e.preventDefault();
+      } else if (e.key === 'Enter') {
+        if (selectedIndex >= 0) {
+          selectItem(selectedIndex);
+          e.preventDefault();
+        }
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      list.style.display = 'none';
+    }
+  });
+  
+  document.getElementById("dkpsform").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            const url = 'https://script.google.com/macros/s/AKfycbxY25PsrpKKY-q8AHVREkbSYFoQUScC8AyWUV-N4vbeq79GDtgHxrw3YPX3ScHM3XYeMg/exec'; // Replace with your actual deployed Web App URL
+
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Appointment booked successfully!');
+                    document.getElementById("dkpsform").reset(); // Reset the form
+                } else {
+                    alert('Error booking appointment.');
+                }
+            })
+            .catch(error => {
+                
+                console.error('Error:', error);
+                alert('Error booking appointment.');
+            });
+        });
+  
+</script>
+</body>
+</html>
